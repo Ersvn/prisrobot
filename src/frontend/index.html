@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <title>Prisrobot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 40px auto;
+        }
+        input, button {
+            padding: 8px;
+            margin: 5px 0;
+            width: 100%;
+        }
+        ul {
+            padding: 0;
+            list-style: none;
+        }
+        li {
+            background: #f3f3f3;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Prisrobot – Produkter</h1>
+
+<h3>Lägg till produkt</h3>
+<input id="name" placeholder="Produktnamn">
+<input id="price" placeholder="Pris" type="number">
+<input id="url" placeholder="Produktens URL">
+<button onclick="addProduct()">Spara produkt</button>
+
+<h3>Alla produkter</h3>
+<ul id="productList"></ul>
+
+<script>
+    async function loadProducts() {
+        const res = await fetch("http://localhost:8080/api/products");
+        const products = await res.json();
+
+        const list = document.getElementById("productList");
+        list.innerHTML = "";
+
+        products.forEach(p => {
+            const li = document.createElement("li");
+            li.innerHTML = `
+                <strong>${p.name}</strong> – ${p.price} kr<br>
+                <a href="${p.url}" target="_blank">${p.url}</a>
+            `;
+            list.appendChild(li);
+        });
+    }
+
+    async function addProduct() {
+        const name = document.getElementById("name").value;
+        const price = document.getElementById("price").value;
+        const url = document.getElementById("url").value;
+
+        await fetch("http://localhost:8080/api/products", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({name, price, url})
+        });
+
+        loadProducts();
+    }
+
+    loadProducts();
+</script>
+
+</body>
+</html>

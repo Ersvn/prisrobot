@@ -11,17 +11,16 @@ public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    private String name;
-
+    private String name, url;
     private double price;
 
     public Product() {
     }
 
-    public Product(String name, double price) {
+    public Product(String name, double price, String url) {
         this.name = name;
         this.price = price;
+        this.url = url;
     }
 
     public Long getId() {
@@ -43,5 +42,14 @@ public class Product {
     public void setPrice(double price) {
         this.price = price;
     }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
 }
 
