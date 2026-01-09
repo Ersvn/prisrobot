@@ -73,21 +73,31 @@ public class ProductController {
     @GetMapping(value = "/export", produces = "text/csv")
     public void exportToCsv(HttpServletResponse response) throws IOException {
         response.setContentType("text/csv");
-        response.setHeader("Content-Disposition", "attachment; filename=products.csv");
+
+        String today = java.time.LocalDate.now().toString();
+        response.setHeader("Content-Disposition", "attachment; filename=products_" + today + ".csv");
 
         List<Product> products = service.getAll();
 
         PrintWriter writer = response.getWriter();
-        writer.println("Code;Namn;EAN;Typ;Eget pris;Externt pris;URL");
+        writer.println("Code;Namn;EAN;Typ;Eget pris;Externt pris;Diff;Diff %;URL");
 
         for (Product p : products) {
+
+            double own = p.getOwnPrice().doubleValue();
+            double ext = p.getExternalPrice().doubleValue();
+            double diff = own - ext;
+            double percent = ext > 0 ? (diff / ext) * 100 : 0;
+
             writer.println(
-                    "=\"" + safe(p.getCode()) + "\";" +
-                            "=\"" + safe(p.getName()) + "\";" +
-                            "=\"" + safe(p.getEan()) + "\";" +
-                            "=\"" + safe(p.getType()) + "\";" +
+                    safe(p.getCode()) + ";" +
+                            safe(p.getName()) + ";" +
+                            safe(p.getEan()) + ";" +
+                            safe(p.getType()) + ";" +
                             safe(p.getOwnPrice()) + ";" +
                             safe(p.getExternalPrice()) + ";" +
+                            diff + ";" +
+                            String.format("%.1f%%", percent) + ";" +
                             "=HYPERLINK(\"" + safe(p.getUrl()) + "\";\"Länk\")"
             );
         }

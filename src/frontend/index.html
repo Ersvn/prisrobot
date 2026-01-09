@@ -6,7 +6,6 @@
     <link rel="stylesheet" href="style.css">
 
     <style>
-        /* Zebra-ränder */
         table tr:nth-child(even) {
             background-color: #f2f2f2;
         }
@@ -15,7 +14,6 @@
             background-color: #ffffff;
         }
 
-        /* Highlight av sökträffar */
         .highlight {
             background-color: yellow;
             font-weight: bold;
@@ -118,14 +116,15 @@
             const own = Number(product.ownPrice);
             const ext = Number(product.externalPrice);
 
-            let diff = ext - own;
-            let percent = own > 0 ? (diff / own) * 100 : 0;
+
+            let diff = own - ext;
+            let percent = ext > 0 ? (diff / ext) * 100 : 0;
 
             let sign = diff > 0 ? "+" : "";
 
             let color = "gray";
-            if (diff < 0) color = "green";
-            if (diff > 0) color = "red";
+            if (diff < 0) color = "red";
+            if (diff > 0) color = "green";
 
             const row = document.createElement("tr");
 
@@ -173,8 +172,8 @@
 
         if (key === "diff") {
             const sorted = [...allProducts].sort((a, b) => {
-                const aDiff = Number(a.externalPrice) - Number(a.ownPrice);
-                const bDiff = Number(b.externalPrice) - Number(b.ownPrice);
+                const aDiff = Number(a.ownPrice) - Number(a.externalPrice);
+                const bDiff = Number(b.ownPrice) - Number(b.externalPrice);
                 return currentSort.asc ? aDiff - bDiff : bDiff - aDiff;
             });
             return renderTable(sorted);
