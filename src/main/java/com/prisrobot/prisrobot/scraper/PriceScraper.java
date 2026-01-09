@@ -2,37 +2,52 @@ package com.prisrobot.prisrobot.scraper;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.math.BigDecimal;
 
 @Component
 public class PriceScraper {
 
-    public double fetchPrice(String url) {
+    public BigDecimal scrapePrice(String url) {
         try {
-
             Document doc = Jsoup.connect(url)
                     .userAgent("Mozilla/5.0")
-                    .timeout(5000)
+                    .timeout(10_000)
                     .get();
 
-            // Detta måste anpassas per butik senare
-            Element priceElement = doc.selectFirst(".price, .product-price, .Price, .price-tag");
+            Elements priceEl = doc.select(".price");
 
-            if (priceElement == null) {
-                System.out.println("Kunde inte hitta pris på sidan.");
-                return -1;
+            if (!priceEl.isEmpty()) {
+                String raw = priceEl.first().text();
+                return parsePrice(raw);
             }
 
-            String priceText = priceElement.text()
-                    .replaceAll("[^0-9,\\.]", "")
-                    .replace(",", ".");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-            return Double.parseDouble(priceText);
+        return null;
+    }
 
-        } catch (Exception e) {
-            System.out.println("Scraping error: " + e.getMessage());
-            return -1;
+    private BigDecimal parsePrice(String raw) {
+        if (raw == null) return null;
+
+        String cleaned = raw
+                .replace(":-", "")
+                .replace("kr", "")
+                .replace("&nbsp;", "")
+                .replace("\u00A0", "")
+                .replace(" ", "")
+                .replace(",", ".")
+                .trim();
+
+        try {
+            return new BigDecimal(cleaned);
+        } catch (NumberFormatException e) {
+            return null;
         }
     }
 }

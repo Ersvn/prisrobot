@@ -1,30 +1,40 @@
 package com.prisrobot.prisrobot.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
+
+import java.math.BigDecimal;
 
 @Entity
 public class Product {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    private String name, url;
-    private double price;
+    private Long id; // används endast internt av JPA
 
-    public Product() {
-    }
+    @Column(unique = true, nullable = false)
+    private String code; // din primära identifierare i API:et
 
-    public Product(String name, double price, String url) {
-        this.name = name;
-        this.price = price;
-        this.url = url;
-    }
+    private String name;
+    private String ean;
+    private String type;
+
+    private BigDecimal ownPrice;
+    private BigDecimal externalPrice;
+
+    private String url;
+
+    // --- Getters & Setters ---
 
     public Long getId() {
         return id;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
     }
 
     public String getName() {
@@ -35,12 +45,36 @@ public class Product {
         this.name = name;
     }
 
-    public double getPrice() {
-        return price;
+    public String getEan() {
+        return ean;
     }
 
-    public void setPrice(double price) {
-        this.price = price;
+    public void setEan(String ean) {
+        this.ean = ean;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public BigDecimal getOwnPrice() {
+        return ownPrice;
+    }
+
+    public void setOwnPrice(BigDecimal ownPrice) {
+        this.ownPrice = ownPrice;
+    }
+
+    public BigDecimal getExternalPrice() {
+        return externalPrice;
+    }
+
+    public void setExternalPrice(BigDecimal externalPrice) {
+        this.externalPrice = externalPrice;
     }
 
     public String getUrl() {
@@ -50,6 +84,5 @@ public class Product {
     public void setUrl(String url) {
         this.url = url;
     }
-
 }
 

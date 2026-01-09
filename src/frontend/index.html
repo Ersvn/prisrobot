@@ -5,72 +5,244 @@
     <title>Prisrobot</title>
     <link rel="stylesheet" href="style.css">
 
+    <style>
+        /* Zebra-ränder */
+        table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        table tr:nth-child(odd) {
+            background-color: #ffffff;
+        }
+
+        /* Highlight av sökträffar */
+        .highlight {
+            background-color: yellow;
+            font-weight: bold;
+        }
+
+        th {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .sort-arrow {
+            margin-left: 5px;
+            font-size: 12px;
+            opacity: 0.6;
+        }
+
+        .export-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 15px;
+        }
+    </style>
 </head>
 <body>
 
 <h1>Prisrobot – Produkter</h1>
 
 <h3>Lägg till produkt</h3>
+
+<input id="code" placeholder="Code (t.ex. 146667)">
 <input id="name" placeholder="Produktnamn">
-<input id="price" placeholder="Pris" type="number">
+<input id="ean" placeholder="EAN">
+<input id="type" placeholder="Typ (t.ex. TV)">
+<input id="ownPrice" placeholder="Eget pris" type="number">
 <input id="url" placeholder="Produktens URL">
-<button onclick="addProduct()">Spara produkt</button>
+
+<button onclick="addProduct()">Lägg till produkt</button>
 
 <h3>Alla produkter</h3>
-<ul id="productList"></ul>
+
+<input id="search" placeholder="Sök produkt..." oninput="filterProducts()" style="margin-bottom: 10px; width: 300px;">
+
+<table>
+    <thead>
+    <tr>
+        <th onclick="sortTable('diff')">Diff <span id="arrow-diff" class="sort-arrow"></span></th>
+        <th onclick="sortTable('code')">Code <span id="arrow-code" class="sort-arrow"></span></th>
+        <th onclick="sortTable('name')">Namn <span id="arrow-name" class="sort-arrow"></span></th>
+        <th onclick="sortTable('ean')">EAN <span id="arrow-ean" class="sort-arrow"></span></th>
+        <th onclick="sortTable('type')">Typ <span id="arrow-type" class="sort-arrow"></span></th>
+        <th onclick="sortTable('ownPrice')">Eget pris <span id="arrow-ownPrice" class="sort-arrow"></span></th>
+        <th onclick="sortTable('externalPrice')">Externt pris <span id="arrow-externalPrice" class="sort-arrow"></span></th>
+        <th>URL</th>
+        <th>Uppdatera pris</th>
+        <th>Ta bort</th>
+    </tr>
+    </thead>
+    <tbody id="product-table-body"></tbody>
+</table>
+
+<div class="export-container">
+    <button onclick="exportCsv()">Exportera till Excel</button>
+</div>
 
 <script>
 
+    let allProducts = [];
+    let currentSort = { key: null, asc: true };
+
     async function loadProducts() {
-        const res = await fetch("http://localhost:8080/api/products");
-        const products = await res.json();
+        const response = await fetch("http://localhost:8080/api/products");
+        allProducts = await response.json();
+        renderTable(allProducts);
+    }
 
-        const list = document.getElementById("productList");
-        list.innerHTML = "";
+    function clearArrows() {
+        document.querySelectorAll(".sort-arrow").forEach(a => a.textContent = "");
+    }
 
-        products.forEach(p => {
-            const li = document.createElement("li");
-            li.innerHTML = `
-        <strong>${p.name}</strong> – ${p.price} kr<br>
-        <a href="${p.url}" target="_blank">${p.url}</a><br>
-        <button onclick="updatePrice(${p.id})">Uppdatera pris</button>
-        <button onclick="deleteProduct(${p.id})" style="background:#c62828;color:white;margin-left:5px;">Ta bort</button>
-    `;
-            list.appendChild(li);
+    function setArrow(key, asc) {
+        clearArrows();
+        const arrow = document.getElementById("arrow-" + key);
+        if (arrow) arrow.textContent = asc ? "↑" : "↓";
+    }
+
+    function highlight(text, query) {
+        if (!query) return text;
+        const regex = new RegExp(`(${query})`, "gi");
+        return text.replace(regex, `<span class="highlight">$1</span>`);
+    }
+
+    function renderTable(products) {
+        const tableBody = document.getElementById("product-table-body");
+        tableBody.innerHTML = "";
+
+        const q = document.getElementById("search").value.toLowerCase();
+
+        products.forEach(product => {
+
+            const own = Number(product.ownPrice);
+            const ext = Number(product.externalPrice);
+
+            let diff = ext - own;
+            let percent = own > 0 ? (diff / own) * 100 : 0;
+
+            let sign = diff > 0 ? "+" : "";
+
+            let color = "gray";
+            if (diff < 0) color = "green";
+            if (diff > 0) color = "red";
+
+            const row = document.createElement("tr");
+
+            row.innerHTML = `
+            <td style="font-weight:bold; color:${color};">
+                ${sign}${diff} (${percent.toFixed(1)}%)
+            </td>
+            <td>${highlight(product.code + "", q)}</td>
+            <td>${highlight(product.name + "", q)}</td>
+            <td>${highlight(product.ean + "", q)}</td>
+            <td>${highlight(product.type + "", q)}</td>
+            <td>${own}</td>
+            <td>${ext}</td>
+            <td><a href="${product.url}" target="_blank">Länk</a></td>
+            <td><button onclick="updatePrice('${product.code}')">Uppdatera pris</button></td>
+            <td><button onclick="deleteProduct('${product.code}')">Ta bort</button></td>
+        `;
+
+            tableBody.appendChild(row);
         });
+    }
+
+    function filterProducts() {
+        const q = document.getElementById("search").value.toLowerCase();
+
+        const filtered = allProducts.filter(p =>
+            (p.code + "").toLowerCase().includes(q) ||
+            (p.name + "").toLowerCase().includes(q) ||
+            (p.ean + "").toLowerCase().includes(q) ||
+            (p.type + "").toLowerCase().includes(q)
+        );
+
+        renderTable(filtered);
+    }
+
+    function sortTable(key) {
+        if (currentSort.key === key) {
+            currentSort.asc = !currentSort.asc;
+        } else {
+            currentSort.key = key;
+            currentSort.asc = true;
+        }
+
+        setArrow(key, currentSort.asc);
+
+        if (key === "diff") {
+            const sorted = [...allProducts].sort((a, b) => {
+                const aDiff = Number(a.externalPrice) - Number(a.ownPrice);
+                const bDiff = Number(b.externalPrice) - Number(b.ownPrice);
+                return currentSort.asc ? aDiff - bDiff : bDiff - aDiff;
+            });
+            return renderTable(sorted);
+        }
+
+        const sorted = [...allProducts].sort((a, b) => {
+            let x = (a[key] ?? "").toString().toLowerCase();
+            let y = (b[key] ?? "").toString().toLowerCase();
+
+            if (!isNaN(x) && !isNaN(y)) {
+                x = Number(x);
+                y = Number(y);
+            }
+
+            if (x < y) return currentSort.asc ? -1 : 1;
+            if (x > y) return currentSort.asc ? 1 : -1;
+            return 0;
+        });
+
+        renderTable(sorted);
     }
 
     async function addProduct() {
         const name = document.getElementById("name").value;
-        const price = document.getElementById("price").value;
+        const ean = document.getElementById("ean").value;
+        const type = document.getElementById("type").value;
+        const ownPrice = document.getElementById("ownPrice").value;
         const url = document.getElementById("url").value;
+        const code = document.getElementById("code").value;
+
+        const product = {
+            name: name,
+            ean: ean,
+            type: type,
+            ownPrice: ownPrice,
+            url: url,
+            code: code
+        };
 
         await fetch("http://localhost:8080/api/products", {
             method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({name, price, url})
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(product)
         });
 
         loadProducts();
     }
 
-    async function updatePrice(id) {
-        await fetch(`http://localhost:8080/api/products/${id}/update-price`, {
+    async function updatePrice(code) {
+        await fetch(`http://localhost:8080/api/products/${code}/update-price`, {
             method: "PUT"
         });
         loadProducts();
     }
 
-    async function deleteProduct(id) {
-        await fetch(`http://localhost:8080/api/products/${id}`, {
+    async function deleteProduct(code) {
+        await fetch(`http://localhost:8080/api/products/${code}`, {
             method: "DELETE"
         });
         loadProducts();
     }
 
-
-
     loadProducts();
+
+    function exportCsv() {
+        window.location.href = "http://localhost:8080/api/products/export";
+    }
+
 </script>
 
 </body>
