@@ -11,9 +11,9 @@ import java.util.Random;
 public class PriceScraperService {
 
     private static final Logger log = LoggerFactory.getLogger(PriceScraperService.class);
-    //------------------------------------------------------//
-    //---Slå AV scraping och använd dummy-priser istället---//
-    //------------------------------------------------------//
+    //----------------------------------------------------//
+    //---Turn scraping off and use dummy prices instead---//
+    //----------------------------------------------------//
     private final boolean useDummyPrices = true;
 
     public Optional<Integer> scrapePrice(String url) {
@@ -21,7 +21,7 @@ public class PriceScraperService {
         log.info("Startar prisuppdatering för URL: {}", url);
 
         //-------------------------//
-        // DUMMY-PRIS AKTIVERAT    //
+        // DUMMY-PRICE ACTIVATED    //
         //-------------------------//
         if (useDummyPrices) {
             int dummyPrice = generateDummyPrice(url);
@@ -30,13 +30,13 @@ public class PriceScraperService {
         }
 
         //---------------------------//
-        // RIKTIG SCRAPING (avstängd)//
+        // REAL SCRAPING (Turned off)//
         //---------------------------//
         log.warn("Scraping är avstängt i denna version. Aktivera useDummyPrices = false för att testa scraping.");
         return Optional.empty();
     }
     //---------------------------------//
-    //---DUMMY PRISER baserat på URL---//
+    //---DUMMY PRICES BASED UPON URL---//
     //---------------------------------//
     private int generateDummyPrice(String url) {
         int base = Math.abs(url.hashCode() % 3000) + 1000; // 1000–3999 kr

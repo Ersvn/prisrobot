@@ -37,10 +37,6 @@ public class ProductService {
         repo.deleteByCode(code);
     }
 
-    /**
-     * Hämtar produktens URL, skrapar priset via PriceScraperService,
-     * uppdaterar externalPrice och sparar produkten.
-     */
     public Optional<Product> updateExternalPrice(String code) {
         return repo.findByCode(code).map(product -> {
 
