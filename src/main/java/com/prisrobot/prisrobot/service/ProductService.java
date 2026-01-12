@@ -2,6 +2,7 @@ package com.prisrobot.prisrobot.service;
 
 import com.prisrobot.prisrobot.model.Product;
 import com.prisrobot.prisrobot.repository.ProductRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -31,6 +32,7 @@ public class ProductService {
         return repo.save(product);
     }
 
+    @Transactional
     public void deleteByCode(String code) {
         repo.deleteByCode(code);
     }

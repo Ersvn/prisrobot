@@ -8,7 +8,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
-
+//------------------------------------------------------------------------------//
+// TODO ändra/ta bort denna klass när PriceScraperService är min primära scraper//
+//------------------------------------------------------------------------------//
 @Component
 public class ElonSearchScraper {
 
