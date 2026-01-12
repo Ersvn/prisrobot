@@ -2,7 +2,6 @@ package com.prisrobot.prisrobot.service;
 
 import com.prisrobot.prisrobot.model.Product;
 import com.prisrobot.prisrobot.repository.ProductRepository;
-import com.prisrobot.prisrobot.scraper.PriceScraper;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -13,11 +12,11 @@ import java.util.Optional;
 public class ProductService {
 
     private final ProductRepository repo;
-    private final PriceScraper priceScraper;
+    private final PriceScraperService priceScraperService;
 
-    public ProductService(ProductRepository repo, PriceScraper priceScraper) {
+    public ProductService(ProductRepository repo, PriceScraperService priceScraperService) {
         this.repo = repo;
-        this.priceScraper = priceScraper;
+        this.priceScraperService = priceScraperService;
     }
 
     public List<Product> getAll() {
@@ -36,15 +35,22 @@ public class ProductService {
         repo.deleteByCode(code);
     }
 
+    /**
+     * Hämtar produktens URL, skrapar priset via PriceScraperService,
+     * uppdaterar externalPrice och sparar produkten.
+     */
     public Optional<Product> updateExternalPrice(String code) {
         return repo.findByCode(code).map(product -> {
-            BigDecimal scrapedPrice = priceScraper.scrapePrice(product.getUrl());
-            if (scrapedPrice != null) {
-                product.setExternalPrice(scrapedPrice);
+
+            Optional<Integer> scrapedPriceOpt = priceScraperService.scrapePrice(product.getUrl());
+
+            scrapedPriceOpt.ifPresent(priceInt -> {
+                BigDecimal price = BigDecimal.valueOf(priceInt);
+                product.setExternalPrice(price);
                 repo.save(product);
-            }
+            });
+
             return product;
         });
     }
 }
-

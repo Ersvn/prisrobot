@@ -9,41 +9,23 @@ public class Product {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; // används endast internt av JPA
+    private Long id;
 
     @Column(unique = true, nullable = false)
-    private String code; // din primära identifierare i API:et
+    private String code, name, ean, type, url;
+    private BigDecimal ownPrice, externalPrice;
 
-    private String name;
-    private String ean;
-    private String type;
 
-    private BigDecimal ownPrice;
-    private BigDecimal externalPrice;
+    //---Getters & Setters---//
+    public Long getId() { return id; }
 
-    private String url;
+    public String getCode() { return code; }
 
-    // --- Getters & Setters ---
+    public void setCode(String code) { this.code = code; }
 
-    public Long getId() {
-        return id;
-    }
+    public String getName() { return name; }
 
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
+    public void setName(String name) { this.name = name; }
 
     public String getEan() {
         return ean;
@@ -57,9 +39,7 @@ public class Product {
         return type;
     }
 
-    public void setType(String type) {
-        this.type = type;
-    }
+    public void setType(String type) { this.type = type; }
 
     public BigDecimal getOwnPrice() {
         return ownPrice;
@@ -77,9 +57,7 @@ public class Product {
         this.externalPrice = externalPrice;
     }
 
-    public String getUrl() {
-        return url;
-    }
+    public String getUrl() { return url; }
 
     public void setUrl(String url) {
         this.url = url;

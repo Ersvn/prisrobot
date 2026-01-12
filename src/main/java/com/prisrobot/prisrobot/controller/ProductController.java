@@ -16,16 +16,17 @@ import java.util.List;
 public class ProductController {
 
     private final ProductService service;
-
     public ProductController(ProductService service) {
         this.service = service;
     }
 
+    //---GET ALL---//
     @GetMapping
     public List<Product> getAll() {
         return service.getAll();
     }
 
+    //---GET BY CODE---//
     @GetMapping("/{code}")
     public ResponseEntity<Product> getByCode(@PathVariable String code) {
         return service.getByCode(code)
@@ -33,11 +34,14 @@ public class ProductController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    //---CREATE PRODUCT---//
     @PostMapping
-    public Product create(@RequestBody Product product) {
-        return service.save(product);
+    public ResponseEntity<Product> create(@RequestBody Product product) {
+        Product saved = service.save(product);
+        return ResponseEntity.ok(saved);
     }
 
+    //---UPDATE PRODUCT---//
     @PutMapping("/{code}")
     public ResponseEntity<Product> update(@PathVariable String code, @RequestBody Product updated) {
         return service.getByCode(code)
@@ -48,12 +52,15 @@ public class ProductController {
                     existing.setOwnPrice(updated.getOwnPrice());
                     existing.setExternalPrice(updated.getExternalPrice());
                     existing.setUrl(updated.getUrl());
-                    existing.setCode(updated.getCode()); // om du vill kunna ändra code
-                    return ResponseEntity.ok(service.save(existing));
+                    existing.setCode(updated.getCode()); // valfritt om du vill tillåta ändring av code
+
+                    Product saved = service.save(existing);
+                    return ResponseEntity.ok(saved);
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    //---UPDATE PRICE (SCRAPING / API)---//
     @PutMapping("/{code}/update-price")
     public ResponseEntity<Product> updatePrice(@PathVariable String code) {
         return service.updateExternalPrice(code)
@@ -61,6 +68,7 @@ public class ProductController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    //---DELETE PRODUCT---//
     @DeleteMapping("/{code}")
     public ResponseEntity<Void> delete(@PathVariable String code) {
         if (service.getByCode(code).isEmpty()) {
@@ -70,6 +78,7 @@ public class ProductController {
         return ResponseEntity.noContent().build();
     }
 
+    //---EXPORT CSV---//
     @GetMapping(value = "/export", produces = "text/csv")
     public void exportToCsv(HttpServletResponse response) throws IOException {
         response.setContentType("text/csv");
@@ -84,8 +93,9 @@ public class ProductController {
 
         for (Product p : products) {
 
-            double own = p.getOwnPrice().doubleValue();
-            double ext = p.getExternalPrice().doubleValue();
+            double own = p.getOwnPrice() != null ? p.getOwnPrice().doubleValue() : 0;
+            double ext = p.getExternalPrice() != null ? p.getExternalPrice().doubleValue() : 0;
+
             double diff = own - ext;
             double percent = ext > 0 ? (diff / ext) * 100 : 0;
 
